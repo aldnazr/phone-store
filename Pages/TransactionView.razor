@@ -1,0 +1,149 @@
+@page "/"
+@inject HttpClient Http
+@using PhoneStore.Components
+@using PhoneStore.Data.Models
+@using PhoneStore.Data.Services
+@inject CartService CartService
+
+<PageTitle>Transaction</PageTitle>
+<Toast @ref="toast" />
+
+<div class="main-container">
+    <div class="left-panel">
+        <div class="scrollitem">
+            <div class="input-group mb-3">
+                <input class="form-control" placeholder="Nama Handphone" type="text" @bind="phoneModel.NamaHandphone"
+                    readonly>
+            </div>
+
+            <div class="input-group mb-3">
+                <input class="form-control" placeholder="Harga" type="text" @bind="phoneModel.Harga" readonly>
+            </div>
+
+            <div class="input-group">
+                <input class="form-control" placeholder="Stok" type="number" min="1" @bind="quantity"
+                    max="@phoneModel.Stok">
+            </div>
+            <div class="stock-info mb-3 ms-2">Stok tersedia: @phoneModel.Stok</div>
+
+            <div class="d-flex flex-column gap-2">
+                <button class="btn btn-primary" @onclick="OnCheckout">Checkout</button>
+                <button class="btn btn-secondary" @onclick="ClearForm">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <Header Title="Pilih barang" />
+        <input type="text" class="form-control w-25 mb-3" placeholder="Cari..." @oninput="OnSearchChanged">
+        <div class="inventory-section">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Stok</th>
+                        <th>Harga</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (phones == null)
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                <div class="spinner-border" role="status" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var phone in phones?.Where(p => string.IsNullOrEmpty(searchText)
+                                            || p.NamaBrand!.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                                            || p.NamaHandphone!.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                                            ?? Enumerable.Empty<Phone>())
+                        {
+                            <tr @onclick="() => selectedPhone(phone)">
+                                <td>@phone.NamaBrand</td>
+                                <td>@phone.NamaHandphone</td>
+                                <td>@phone.Stok pcs</td>
+                                <td>@phone.Harga.ToString()</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Phone phoneModel = new Phone();
+    private List<Phone>? phones;
+    private string searchText = string.Empty;
+    private int? quantity = 0;
+    private Toast? toast;
+
+    private async Task ShowToast(string message)
+    {
+        if (toast != null)
+        {
+            await toast.Show(message);
+        }
+    }
+
+    private async Task OnCheckout()
+    {
+        if (phoneModel.Stok == 0 || quantity == 0)
+        {
+            await ShowToast("Stok kosong!");
+        }
+        else
+        {
+            await addToCart();
+            await ShowToast("Produk ditambahkan ke keranjang belanja");
+        }
+    }
+
+    private async Task addToCart()
+    {
+        var item = new CartItem
+        {
+            Id = phoneModel.IdBrand ?? 0,
+            Name = phoneModel.NamaBrand ?? "",
+            Price = phoneModel.Harga ?? 0,
+            Quantity = quantity ?? 0
+        };
+        await CartService.AddItemAsync(item);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        phones = await Http.GetFromJsonAsync<List<Phone>>("transaction");
+        await CartService.LoadCartAsync();
+    }
+
+    private void selectedPhone(Phone phone)
+    {
+        phoneModel = new Phone
+        {
+            IdPhone = phone.IdPhone,
+            IdBrand = phone.IdBrand,
+            NamaBrand = phone.NamaBrand,
+            NamaHandphone = phone.NamaHandphone,
+            Harga = phone.Harga,
+            Stok = phone.Stok,
+            Deskripsi = phone.Deskripsi
+        };
+        quantity = phone.Stok < 1 ? null : 1;
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private void ClearForm()
+    {
+        phoneModel = new Phone();
+    }
+}

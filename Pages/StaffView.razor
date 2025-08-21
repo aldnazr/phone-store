@@ -1,0 +1,66 @@
+@page "/staff"
+@inject HttpClient Http
+@using PhoneStore.Components
+@using PhoneStore.Data.Models
+
+<PageTitle>Riwayat Transaksi</PageTitle>
+
+<div class="main-container">
+    <Header Title="Daftar Karyawan" />
+    <input type="text" class="form-control w-25 mb-3" placeholder="Cari...">
+    <div class="inventory-section">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>ID User</th>
+                    <th>Nama lengkap</th>
+                    <th>Tanggal Lahir</th>
+                    <th>Gender</th>
+                    <th>aAlamat</th>
+                    <th>Email</th>
+                    <th>No. Telp</th>
+                    <th>Jenis Akun</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (staffs == null)
+                {
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="spinner-border" role="status" />
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var staff in staffs)
+                    {
+                        <tr>
+                            <td>@staff.IdUser</td>
+                            <td>@staff.NamaLengkap</td>
+                            <td>@staff.TanggalLahir</td>
+                            <td>@staff.Gender</td>
+                            <td>@staff.Alamat</td>
+                            <td>@staff.Email</td>
+                            <td>@staff.NoTelp</td>
+                            <td>@staff.TipeAkun</td>
+                            <td>@staff.Username</td>
+                            <td>@staff.Password</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Staff>? staffs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        staffs = await Http.GetFromJsonAsync<List<Staff>>("staffs");
+    }
+}

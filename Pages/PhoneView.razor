@@ -1,0 +1,169 @@
+@page "/phone"
+@inject HttpClient Http
+@inject ICrudService<Phone> PhoneService
+@using PhoneStore.Components
+@using PhoneStore.Data.Models
+@using System.Text
+@using System.Text.Json
+@using PhoneStore.Data.Services
+
+<PageTitle>Phones</PageTitle>
+<Toast @ref="toast" />
+
+<div class="main-container">
+    <div class="left-panel">
+        <div class="scrollitem">
+            <EditForm Model="@phoneModel" OnSubmit="@SavePhone">
+                <div class="input-group mb-3">
+                    <InputNumber placeholder="Brand" class="form-control" @bind-Value="phoneModel.IdBrand" />
+                </div>
+
+                <div class="input-group mb-3">
+                    <InputText placeholder="Model" class="form-control" @bind-Value="phoneModel.NamaHandphone" />
+                </div>
+
+                <div class="input-group">
+                    <InputNumber placeholder="Stok" class="form-control" @bind-Value="phoneModel.Stok" min="0" />
+                </div>
+                <div class="stock-info mb-3 ms-2">Stok tersedia: @phoneModel.Stok</div>
+
+                <div class="input-group mb-3">
+                    <InputNumber placeholder="Harga" class="form-control" @bind-Value="phoneModel.Harga" min="1" />
+                </div>
+
+                <div class="input-group mb-3">
+                    <InputTextArea placeholder="Deskripsi" class="form-control" @bind-Value="phoneModel.Deskripsi" />
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="reset" class="btn btn-secondary" @onclick="ClearForm">Reset</button>
+                    <button type="button" @onclick="DeletePhone" class="btn btn-danger">Delete</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <Header Title="Daftar Handphone" />
+        <input type="text" class="form-control w-25 mb-3" placeholder="Cari..." @oninput="OnSearchChanged">
+        <div class="inventory-section">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Stok</th>
+                        <th>Harga</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (phones == null)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <div class="spinner-border" role="status" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var phone in phones?.Where(p => string.IsNullOrEmpty(searchText) ||
+                                            p.NamaBrand!.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                                            p.NamaHandphone!.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                                            ?? Enumerable.Empty<Phone>())
+                        {
+                            <tr style="cursor: pointer;" @onclick="() => selectedPhone(phone)">
+                                <td>@phone.NamaBrand</td>
+                                <td>@phone.NamaHandphone</td>
+                                <td>@phone.Stok pcs</td>
+                                <td>@phone.Harga.ToString()</td>
+                                <td>@phone.Deskripsi</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Phone phoneModel = new Phone();
+    private List<Phone>? phones;
+    private string? searchText;
+    private int? quantity;
+    private Toast? toast;
+
+    protected override async Task OnInitializedAsync()
+    {
+        phones = await PhoneService.GetAllAsync("phones");
+    }
+
+    private async Task SavePhone()
+    {
+        var response = await PhoneService.InsertAsync("phones", phoneModel);
+
+        if (response)
+        {
+            await LoadBrands();
+            phoneModel = new Phone();
+            quantity = null;
+            await ShowToast("Insert Successful");
+        }
+    }
+
+    private async Task DeletePhone()
+    {
+        Console.WriteLine($"Deleting phone with ID: {phoneModel.IdBrand}");
+        if (phoneModel.IdBrand != null)
+        {
+            var response = await PhoneService.DeleteAsync("phones", phoneModel.IdBrand);
+            if (response)
+            {
+                await LoadBrands();
+                await ShowToast("Delete Successful");
+                ClearForm();
+            }
+        }
+    }
+
+    private async Task LoadBrands()
+    {
+        phones = await PhoneService.GetAllAsync("phones");
+    }
+
+    private void ClearForm()
+    {
+        phoneModel = new Phone();
+    }
+
+    private void selectedPhone(Phone phone)
+    {
+        phoneModel = new Phone
+        {
+            IdPhone = phone.IdPhone,
+            IdBrand = phone.IdBrand,
+            NamaBrand = phone.NamaBrand,
+            NamaHandphone = phone.NamaHandphone,
+            Harga = phone.Harga,
+            Stok = phone.Stok,
+            Deskripsi = phone.Deskripsi
+        };
+        quantity = phone.Stok < 1 ? null : phone.Stok;
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task ShowToast(string message)
+    {
+        if (toast != null)
+        {
+            await toast.Show(message);
+        }
+    }
+}

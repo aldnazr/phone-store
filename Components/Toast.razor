@@ -1,0 +1,26 @@
+@if (IsVisible)
+{
+    <div class="toast-container">
+        <div class="toast-message">
+            <span>@Message</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Message { get; set; } = "Hello, world!";
+    [Parameter] public int Duration { get; set; } = 3000; // ms
+
+    private bool IsVisible { get; set; } = false;
+
+    public async Task Show(string message)
+    {
+        Message = message;
+        IsVisible = true;
+        StateHasChanged();
+
+        await Task.Delay(Duration);
+        IsVisible = false;
+        StateHasChanged();
+    }
+}

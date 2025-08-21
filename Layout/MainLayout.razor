@@ -1,0 +1,64 @@
+﻿@using PhoneStore.Data.Services
+@inherits LayoutComponentBase
+@inject CartService CartService
+@inject NavigationManager NavigationManager
+
+
+<div class="page">
+    <div class="sidebar @NavMenuCssClass shadow-sm">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="header">
+            <button class="btn" role="button" @onclick="ToggleNavMenu">
+                <div class="bi bi-list" style="font-size: large;"></div>
+            </button>
+            @* <div class="header-title">Kasir App</div> *@
+            <a href="/cart" class="btn cart-container">
+                <div class="bi bi-cart2" style="font-size: x-large;"></div>
+                <div class="rounded-circle cart-count">
+                    @CartCount()
+                </div>
+            </a>
+
+        </div>
+
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+@code {
+    private bool collapseNavMenu = false;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : "";
+
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void NavigateToCart()
+    {
+        collapseNavMenu = true;
+        NavigationManager.NavigateTo("/cart");
+    }
+
+    private int CartCount()
+    {
+        return CartService.Items.Count;
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

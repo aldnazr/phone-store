@@ -1,0 +1,169 @@
+@page "/cart"
+@using PhoneStore.Components
+@using System.Globalization
+@using PhoneStore.Data.Models
+@using PhoneStore.Data.Services
+@inject CartService CartService
+@inject HttpClient Http
+
+<PageTitle>Keranjang Belanja</PageTitle>
+<Toast @ref="toast" />
+
+<div class="d-flex gap-5 cart-container">
+    <div class="left-panel">
+        <Header Title="Keranjang Belanja" />
+
+        <table class="cart-table mt-4">
+            <thead>
+                <tr>
+                    <th>Pilih</th>
+                    <th>Produk</th>
+                    <th>Kuantitas</th>
+                    <th>Harga Satuan</th>
+                    <th>Total Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (CartService.Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center">Keranjang kosong</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in CartService.Items)
+                    {
+                        <tr>
+                            <td><input checked="@selectedItems.Contains(item.Id)"
+                                    @onchange="e => OnProductToggled(item.Id, (bool)e.Value!)" class="form-check-input"
+                                    type="checkbox"></td>
+                            <td>@item.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Price.ToString("N0")</td>
+                            <td>@GetSubTotal(item)</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="action-buttons">
+            <button disabled="@(CartService.Items.Count == 0)" class="popover-hover btn btn-sm" @onclick="@RemoveItem">
+                <i class="bi bi-trash"></i>
+                <span class="popover-box">
+                    Hapus terpilih
+                </span>
+            </button>
+            <button disabled="@(CartService.Items.Count == 0)" class="popover-hover btn btn-sm"
+                @onclick="@ClearCartAsync">
+                <i class="bi bi-x-circle"></i>
+                <span class="popover-box">
+                    Hapus semua
+                </span>
+            </button>
+        </div>
+
+    </div>
+    <div class="right-panel">
+        <h5 class="mb-4">Summary</h5>
+        <div class="d-flex justify-content-between">
+            <h6>Tax</h6>
+            <h6>10%</h6>
+        </div>
+        <div class="d-flex flex-column mt-2 mb-3 border-top">
+            <span class="mt-2" style="font-size: medium;">Total</span>
+            <span class="total-amount currency">@GetTotalFormatted()</span>
+        </div>
+        <div class="d-flex flex-column gap-2">
+            <input type="text" class="form-control form-control-sm" placeholder="Masukkan nama pembeli"
+                @bind="customerName">
+            <button @onclick="CheckOut" class="btn btn-primary">Checkout</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string customerName = "";
+    private List<int> selectedItems = new List<int>();
+    private Toast? toast;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CartService.LoadCartAsync();
+        @* brands = await Http.GetFromJsonAsync<List<Brand>>("transactions"); *@
+    }
+
+    private async Task CheckOut()
+    {
+        var payload = new
+        {
+            id_user = 1,
+            nama_pelanggan = customerName,
+            total_harga = GetTotal(),
+            items = CartService.Items.Select(i => new
+            {
+                id_phone = i.Id,
+                jumlah = i.Quantity,
+                harga = i.Price
+            }).ToArray()
+        };
+
+        var response = await Http.PostAsJsonAsync("transaction", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await ClearCartAsync();
+            await ShowToast("Transaksi berhasil");
+        }
+        else
+        {
+            await ShowToast("Gagal melakukan transaksi");
+        }
+    }
+    private async Task ShowToast(string message)
+    {
+        if (toast != null)
+        {
+            await toast.Show(message);
+        }
+    }
+
+    private void OnProductToggled(int itemId, bool isChecked)
+    {
+        if (isChecked)
+            selectedItems.Add(itemId);
+        else
+            selectedItems.Remove(itemId);
+    }
+    private async Task ClearCartAsync()
+    {
+        await CartService.ClearCartAsync();
+    }
+
+    private async Task RemoveItem()
+    {
+        @foreach (var id in selectedItems)
+        {
+            await CartService.RemoveItemAsync(id);
+        }
+    }
+
+    private string GetSubTotal(CartItem item)
+    {
+        var total = item.Price * item.Quantity;
+        return total.ToString("N0");
+    }
+
+    private int GetTotal()
+    {
+        var total = CartService.Items.Sum(x => x.Price * x.Quantity);
+        var tax = (int)total + (int)total * 0.1;
+        return (int)tax;
+    }
+
+    private string GetTotalFormatted()
+    {
+        return GetTotal().ToString("C", new CultureInfo("id-ID"));
+    }
+}

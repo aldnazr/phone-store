@@ -1,0 +1,157 @@
+@page "/brand"
+@inject HttpClient Http
+@using PhoneStore.Components
+@using PhoneStore.Data.Models
+
+<PageTitle>Brand</PageTitle>
+<Toast @ref="toast" />
+
+<div class="main-container">
+    <div class="left-panel">
+        <EditForm Model="brandModel" OnSubmit="SaveBrand" FormName="Create">
+            <div class="scrollitem">
+                <div class="input-group mb-3">
+                    <input class="form-control" placeholder="ID Brand" type="number" @bind-value="brandModel.IdBrand"
+                        readonly>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input class="form-control" placeholder="Model" type="text" @bind-value="brandModel.NamaBrand">
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="reset" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                    <button type="button" class="btn btn-secondary" @onclick="DeleteBrand">Delete</button>
+                </div>
+            </div>
+
+        </EditForm>
+    </div>
+
+    <div class="right-panel">
+        <Header Title="List Brand" />
+        <input type="text" class="form-control w-25 mb-3" placeholder="Cari..." @oninput="OnSearchChanged">
+        <div class="inventory-section">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>ID Brand</th>
+                        <th>Nama Brand</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (brands == null)
+                    {
+                        <tr>
+                            <td colspan="2" class="text-center">
+                                <div class="spinner-border" role="status" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var brand in brands?.Where(b => string.IsNullOrEmpty(searchText)
+                                            || b.NamaBrand!.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                                            ?? Enumerable.Empty<Brand>())
+                        {
+                            <tr @onclick="() => selectedBrand(brand)">
+                                <td>@brand.IdBrand</td>
+                                <td>@brand.NamaBrand</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Brand brandModel = new Brand();
+    private List<Brand>? brands;
+    private string searchText = string.Empty;
+    private Toast? toast;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBrands();
+    }
+
+    private async Task LoadBrands()
+    {
+        await Http.GetFromJsonAsync<List<Brand>>("brands").ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                brands = task.Result;
+            }
+        });
+    }
+
+    private void selectedBrand(Brand brand)
+    {
+        brandModel = new Brand
+        {
+            IdBrand = brand.IdBrand,
+            NamaBrand = brand.NamaBrand!
+        };
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task SaveBrand()
+    {
+        if (brandModel.IdBrand == null)
+        {
+            // POST (Tambah data baru)
+            var response = await Http.PostAsJsonAsync("brands/", brandModel);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadBrands();
+                await ShowToast("Insert Successful");
+            }
+        }
+        else
+        {
+            // PUT (Update data)
+            var response = await Http.PutAsJsonAsync($"brands/{brandModel.IdBrand}", brandModel);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadBrands();
+                await ShowToast("Update Successful");
+            }
+        }
+    }
+
+    private async Task DeleteBrand()
+    {
+        if (brandModel.IdBrand != null)
+        {
+            var response = await Http.DeleteAsync($"brands/{brandModel.IdBrand}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadBrands();
+                await ShowToast("Delete Successful");
+                ClearForm();
+            }
+        }
+    }
+
+    private void ClearForm()
+    {
+        brandModel = new Brand();
+    }
+
+    private async Task ShowToast(string message)
+    {
+        if (toast != null)
+        {
+            await toast.Show(message);
+        }
+    }
+
+}

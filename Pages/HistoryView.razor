@@ -1,0 +1,64 @@
+@page "/riwayat-transaksi"
+@inject HttpClient Http
+@using PhoneStore.Components
+@using PhoneStore.Data.Models
+
+<PageTitle>Riwayat Transaksi</PageTitle>
+
+<div class="main-container">
+    <Header Title="Transaksi" />
+    <input type="text" class="form-control w-25 mb-3" placeholder="Cari...">
+    <div class="inventory-section">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>ID Transaksi</th>
+                    <th>Kasir</th>
+                    <th>Pembeli</th>
+                    <th>Tanggal Transaksi</th>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>Harga</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (historyTransactions == null)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="spinner-border" role="status" />
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var history in historyTransactions)
+                    {
+                        <tr>
+                            <td>@history.IdTransaksi</td>
+                            <td>@history.Pelayan</td>
+                            <td>@history.NamaPelanggan</td>
+                            <td>@history.Tanggal</td>
+                            <td>@history.NamaBrand</td>
+                            <td>@history.NamaHandphone</td>
+                            <td>@history.HargaBarang</td>
+                            <td>@history.JumlahPembelian</td>
+                            <td>@history.Subtotal</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<HistoryTransaction>? historyTransactions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        historyTransactions = await Http.GetFromJsonAsync<List<HistoryTransaction>>("histories");
+    }
+}
