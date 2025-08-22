@@ -5,11 +5,11 @@
 
 
 <div class="page">
-    <div class="sidebar @NavMenuCssClass shadow-sm">
+    <div class="sidebar @(collapseNavMenu ? "show" : "") shadow-sm">
         <NavMenu />
     </div>
 
-    <main>
+    <main class="@(collapseNavMenu ? "shifted" : "")">
         <div class="header">
             <button class="btn" role="button" @onclick="ToggleNavMenu">
                 <div class="bi bi-list" style="font-size: large;"></div>

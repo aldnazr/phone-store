@@ -4,11 +4,24 @@
     display: flex;
     flex-direction: row;
     height: 100vh;
+    position: relative;
+    /* supaya sidebar absolute bisa nempel ke page */
 }
 
 .sidebar {
     width: 270px;
     background-color: white;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateX(-270px);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar.show {
+    transform: translateX(0);
 }
 
 main {
@@ -17,6 +30,12 @@ main {
     flex-direction: column;
     color: #333333;
     height: 100%;
+    transition: margin-left 0.3s ease;
+    margin-left: 0;
+}
+
+main.shifted {
+    margin-left: 270px;
 }
 
 .header {
