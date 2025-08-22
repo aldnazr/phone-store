@@ -5,11 +5,11 @@
 
 
 <div class="page">
-    <div class="sidebar @(collapseNavMenu ? "show" : "") shadow-sm">
+    <div class="sidebar @(isMenuOpen ? "show" : "") shadow-sm">
         <NavMenu />
     </div>
 
-    <main class="@(collapseNavMenu ? "shifted" : "")">
+    <main class="@(isMenuOpen ? "shifted" : "")">
         <div class="header">
             <button class="btn" role="button" @onclick="ToggleNavMenu">
                 <div class="bi bi-list" style="font-size: large;"></div>
@@ -32,7 +32,7 @@
 
 
 @code {
-    private bool collapseNavMenu = false;
+    private bool isMenuOpen = true;
 
     protected override void OnInitialized()
     {
@@ -46,7 +46,7 @@
 
     private void NavigateToCart()
     {
-        collapseNavMenu = true;
+        isMenuOpen = true;
         NavigationManager.NavigateTo("/cart");
     }
 
@@ -57,6 +57,6 @@
 
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        isMenuOpen = !isMenuOpen;
     }
 }

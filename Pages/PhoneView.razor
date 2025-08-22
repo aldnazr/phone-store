@@ -1,6 +1,7 @@
 @page "/phone"
 @inject HttpClient Http
 @inject ICrudService<Phone> PhoneService
+@inject ICrudService<Brand> BrandService
 @using PhoneStore.Components
 @using PhoneStore.Data.Models
 @using System.Text
@@ -15,7 +16,20 @@
         <div class="scrollitem">
             <EditForm Model="@phoneModel" OnSubmit="@SavePhone">
                 <div class="input-group mb-3">
-                    <InputNumber placeholder="Brand" class="form-control" @bind-Value="phoneModel.IdBrand" />
+                    <InputSelect placeholder="Brand" class="form-select" @bind-Value="phoneModel.IdBrand">
+                        <option selected disabled>Select Brand</option>
+                        @if (brands != null)
+                        {
+                            @foreach (var brand in brands)
+                            {
+                                <option value="@brand.IdBrand">@brand.NamaBrand</option>
+                            }
+                        }
+                        else
+                        {
+                            <option disabled>Loading Brands...</option>
+                        }
+                    </InputSelect>
                 </div>
 
                 <div class="input-group mb-3">
@@ -37,7 +51,7 @@
 
                 <div class="d-flex flex-column gap-2">
                     <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="reset" class="btn btn-secondary" @onclick="ClearForm">Reset</button>
+                    <button type="reset" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
                     <button type="button" @onclick="DeletePhone" class="btn btn-danger">Delete</button>
                 </div>
             </EditForm>
@@ -92,13 +106,15 @@
 @code {
     private Phone phoneModel = new Phone();
     private List<Phone>? phones;
+    private List<Brand>? brands;
     private string? searchText;
     private int? quantity;
     private Toast? toast;
 
     protected override async Task OnInitializedAsync()
     {
-        phones = await PhoneService.GetAllAsync("phones");
+        await LoadBrand();
+        await LoadPhones();
     }
 
     private async Task SavePhone()
@@ -107,7 +123,7 @@
 
         if (response)
         {
-            await LoadBrands();
+            await LoadPhones();
             phoneModel = new Phone();
             quantity = null;
             await ShowToast("Insert Successful");
@@ -122,16 +138,21 @@
             var response = await PhoneService.DeleteAsync("phones", phoneModel.IdBrand);
             if (response)
             {
-                await LoadBrands();
+                await LoadPhones();
                 await ShowToast("Delete Successful");
                 ClearForm();
             }
         }
     }
 
-    private async Task LoadBrands()
+    private async Task LoadPhones()
     {
         phones = await PhoneService.GetAllAsync("phones");
+    }
+
+    private async Task LoadBrand()
+    {
+        brands = await BrandService.GetAllAsync("brands");
     }
 
     private void ClearForm()
