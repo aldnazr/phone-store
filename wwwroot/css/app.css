@@ -253,6 +253,12 @@ code {
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.inventory-section:hover {
+    scrollbar-color: unset;
 }
 
 .inventory-table {
