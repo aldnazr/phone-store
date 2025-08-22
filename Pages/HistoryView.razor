@@ -43,9 +43,9 @@
                             <td>@history.Tanggal</td>
                             <td>@history.NamaBrand</td>
                             <td>@history.NamaHandphone</td>
-                            <td>@history.HargaBarang</td>
+                            <td>@history.HargaBarang?.ToString("N0")</td>
                             <td>@history.JumlahPembelian</td>
-                            <td>@history.Subtotal</td>
+                            <td>@history.Subtotal?.ToString("N0")</td>
                         </tr>
                     }
                 }

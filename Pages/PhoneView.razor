@@ -20,7 +20,7 @@
                         <option selected disabled>Select Brand</option>
                         @if (brands != null)
                         {
-                            @foreach (var brand in brands)
+                            @foreach (var brand in brands.OrderBy(b => b.NamaBrand))
                             {
                                 <option value="@brand.IdBrand">@brand.NamaBrand</option>
                             }
@@ -92,7 +92,7 @@
                                 <td>@phone.NamaBrand</td>
                                 <td>@phone.NamaHandphone</td>
                                 <td>@phone.Stok pcs</td>
-                                <td>@phone.Harga.ToString()</td>
+                                <td>@phone.Harga?.ToString("N0")</td>
                                 <td>@phone.Deskripsi</td>
                             </tr>
                         }
@@ -119,23 +119,34 @@
 
     private async Task SavePhone()
     {
-        var response = await PhoneService.InsertAsync("phones", phoneModel);
 
-        if (response)
+        if (phoneModel.IdPhone == null)
         {
-            await LoadPhones();
-            phoneModel = new Phone();
-            quantity = null;
-            await ShowToast("Insert Successful");
+            var response = await PhoneService.InsertAsync("phones", phoneModel);
+            if (response)
+            {
+                await LoadPhones();
+                phoneModel = new Phone();
+                quantity = null;
+                await ShowToast("Insert Successful");
+            }
+        }
+        else
+        {
+            var response = await PhoneService.UpdateAsync("phones", phoneModel.IdPhone, phoneModel);
+            if (response)
+            {
+                await LoadPhones();
+                await ShowToast("Update Successful");
+            }
         }
     }
 
     private async Task DeletePhone()
     {
-        Console.WriteLine($"Deleting phone with ID: {phoneModel.IdBrand}");
-        if (phoneModel.IdBrand != null)
+        if (phoneModel.IdPhone != null)
         {
-            var response = await PhoneService.DeleteAsync("phones", phoneModel.IdBrand);
+            var response = await PhoneService.DeleteAsync("phones", phoneModel.IdPhone);
             if (response)
             {
                 await LoadPhones();
@@ -174,12 +185,10 @@
         };
         quantity = phone.Stok < 1 ? null : phone.Stok;
     }
-
     private void OnSearchChanged(ChangeEventArgs e)
     {
         searchText = e.Value?.ToString() ?? string.Empty;
     }
-
     private async Task ShowToast(string message)
     {
         if (toast != null)

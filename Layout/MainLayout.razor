@@ -15,12 +15,12 @@
                 <div class="bi bi-list" style="font-size: large;"></div>
             </button>
             @* <div class="header-title">Kasir App</div> *@
-            <a href="/cart" class="btn cart-container">
+            <button @onclick="NavigateToCart" class="btn cart-container">
                 <div class="bi bi-cart2" style="font-size: x-large;"></div>
                 <div class="rounded-circle cart-count">
                     @CartCount()
                 </div>
-            </a>
+            </button>
 
         </div>
 
@@ -46,7 +46,6 @@
 
     private void NavigateToCart()
     {
-        isMenuOpen = true;
         NavigationManager.NavigateTo("/cart");
     }
 
