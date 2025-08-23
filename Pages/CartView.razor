@@ -9,7 +9,7 @@
 <PageTitle>Keranjang Belanja</PageTitle>
 <Toast @ref="toast" />
 
-<div class="d-flex gap-5 cart-container">
+<div class="d-flex gap-5 w-100 h-100 cart-container">
     <div class="left-panel">
         <Header Title="Keranjang Belanja" />
 
@@ -76,8 +76,7 @@
             <span class="total-amount currency">@GetTotalFormatted()</span>
         </div>
         <div class="d-flex flex-column gap-2">
-            <input type="text" class="form-control form-control-sm" placeholder="Masukkan nama pembeli"
-                @bind="customerName">
+            <input type="text" class="form-control" placeholder="Masukkan nama pembeli" @bind="customerName">
             <button @onclick="CheckOut" class="btn btn-primary">Checkout</button>
         </div>
     </div>

@@ -7,6 +7,13 @@
 
 .left-panel {
     flex: 4;
+    overflow: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.left-panel:hover {
+    scrollbar-color: unset;
 }
 
 .right-panel {

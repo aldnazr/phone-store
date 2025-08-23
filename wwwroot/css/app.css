@@ -252,7 +252,7 @@ code {
 .inventory-section {
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    overflow: scroll;
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
 }
