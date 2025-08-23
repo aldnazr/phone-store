@@ -262,9 +262,17 @@ code {
 }
 
 .inventory-table {
+    table-layout: fixed;
     overflow: hidden;
     border-collapse: collapse;
     border-radius: 8px;
+}
+
+td.deskripsi {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .inventory-table th,
