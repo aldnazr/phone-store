@@ -8,4 +8,4 @@ run project by `dotnet run`
 
 ## Screenshot
 
-No Available yet
+![](https://raw.githubusercontent.com/aldnazr/phone-store/refs/heads/main/preview/1.png)
